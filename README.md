@@ -1,10 +1,10 @@
 # Books Crawler Java
 
-Implementacao do desafio tecnico para a trilha de Crawler/RPA + IA usando `Java 21` e `Maven`.
+Implementação do desafio técnico para a trilha de Crawler/RPA + IA usando `Java 21` e `Maven`.
 
-O projeto coleta dados do site [Books to Scrape](https://books.toscrape.com/), percorre a paginacao do catalogo, extrai informacoes estruturadas de cada livro e gera arquivos de saida em `JSON` e `CSV`. Como diferenciais, a entrega tambem inclui persistencia opcional em PostgreSQL, browser automation para uma pagina dinamica e enrichment opcional com LLM local.
+O projeto coleta dados do site [Books to Scrape](https://books.toscrape.com/), percorre a paginação do catálogo, extrai informações estruturadas de cada livro e gera arquivos de saída em `JSON` e `CSV`. Como diferenciais, a entrega também inclui persistência opcional em PostgreSQL, automação de navegador para uma página dinâmica e enriquecimento opcional com LLM local.
 
-## Visao geral
+## Visão geral
 
 O crawler extrai os seguintes campos para cada livro:
 
@@ -18,7 +18,7 @@ O crawler extrai os seguintes campos para cada livro:
 - `inStock`
 - `availability`
 - `description`
-- `aiInsights` quando o enrichment por IA esta habilitado
+- `aiInsights`, quando o enriquecimento por IA está habilitado
 
 ## Tecnologias utilizadas
 
@@ -29,40 +29,40 @@ O crawler extrai os seguintes campos para cada livro:
 - `Apache Commons CSV`
 - `JUnit 5`
 - `MockWebServer`
-- `PostgreSQL` opcional
-- `Playwright` para o bonus de pagina dinamica
-- `Ollama` para o bonus de enrichment com LLM local
+- `PostgreSQL`, de forma opcional
+- `Playwright`, para o bônus de página dinâmica
+- `Ollama`, para o bônus de enriquecimento com LLM local
 
 ## Estrutura do projeto
 
 ```text
 src/main/java/com/in8/trainee/crawler
-|- cli             -> leitura e validacao de argumentos
+|- cli             -> leitura e validação de argumentos
 |- client          -> cliente HTTP com User-Agent e controle de delay
-|- config          -> configuracoes da aplicacao, banco e IA
-|- http            -> servidor HTTP opcional para execucao em container
-|- model           -> modelos de dominio
-|- parser          -> parse da listagem e da pagina de detalhe
-|- persistence     -> persistencia opcional em PostgreSQL
-|- service         -> orquestracao da coleta
-|- writer          -> exportacao para JSON e CSV
+|- config          -> configurações da aplicação, banco e IA
+|- http            -> servidor HTTP opcional para execução em container
+|- model           -> modelos de domínio
+|- parser          -> parse da listagem e da página de detalhe
+|- persistence     -> persistência opcional em PostgreSQL
+|- service         -> orquestração da coleta
+|- writer          -> exportação para JSON e CSV
 ```
 
 ## Como executar sem Docker
 
-Compile e gere o artefato:
+Primeiro, gere o artefato com Maven:
 
 ```bash
 mvn clean package
 ```
 
-Execute o crawler:
+Depois, execute o crawler:
 
 ```bash
 java -jar target/books-crawler-java-1.0.0.jar
 ```
 
-Exemplo com parametros:
+Exemplo com parâmetros:
 
 ```bash
 java -jar target/books-crawler-java-1.0.0.jar --output-dir output --delay-ms 500 --user-agent "books-crawler-java/1.0" --max-books 50
@@ -74,20 +74,20 @@ Exemplo em modo servidor:
 java -jar target/books-crawler-java-1.0.0.jar --server --port 8080
 ```
 
-Endpoints disponiveis no modo servidor:
+No modo servidor, os endpoints disponíveis são:
 
 - `GET /health`
 - `POST /run`
 
 ## Como executar com Docker
 
-Primeiro gere o artefato com Maven:
+Antes do build da imagem, gere o artefato com Maven:
 
 ```bash
 mvn clean package
 ```
 
-Depois construa a imagem:
+Em seguida, construa a imagem:
 
 ```bash
 docker build -t books-crawler-java .
@@ -99,7 +99,7 @@ Suba o container:
 docker run --rm -p 8080:8080 -v ${PWD}/output:/app/output books-crawler-java
 ```
 
-Dispare uma coleta:
+Depois, dispare uma coleta:
 
 ```bash
 curl -X POST http://localhost:8080/run
@@ -107,21 +107,21 @@ curl -X POST http://localhost:8080/run
 
 ## Como executar com Docker Compose
 
-O arquivo `docker-compose.yml` sobe o scraper e um banco PostgreSQL para persistencia local.
+O arquivo `docker-compose.yml` sobe o scraper e um banco PostgreSQL para persistência local.
 
 ```bash
 docker compose up --build
 ```
 
-Depois que os servicos estiverem disponiveis:
+Depois que os serviços estiverem disponíveis:
 
 ```bash
 curl -X POST http://localhost:8080/run
 ```
 
-## Estrutura dos dados extraidos
+## Estrutura dos dados extraídos
 
-Os arquivos sao gravados no diretorio `output/` com timestamp UTC.
+Os arquivos são gravados no diretório `output/` com timestamp UTC.
 
 Arquivos gerados:
 
@@ -162,113 +162,102 @@ title,product_page_url,image_url,category,upc,price_gbp,rating,in_stock,availabi
 
 ## Pipeline GitLab CI/CD
 
-O arquivo `.gitlab-ci.yml` foi dividido em quatro stages:
+O arquivo `.gitlab-ci.yml` foi dividido em quatro stages. A stage `lint` executa `mvn checkstyle:check` e falha quando encontra violações. A stage `test` executa `mvn test` e falha quando algum teste quebra. A stage `build` gera o artefato, constrói a imagem Docker e faz push para o GitLab Container Registry usando variáveis do CI. Por fim, a stage `deploy` simula um deploy para AWS ECS com `echo` dos comandos e roda apenas na branch `main`.
 
-- `lint`: executa `mvn checkstyle:check` e falha quando encontra violacoes
-- `test`: executa `mvn test` e falha quando algum teste quebra
-- `build`: gera o artefato, constroi a imagem Docker e faz push para o GitLab Container Registry usando variaveis do CI
-- `deploy`: simula um deploy para AWS ECS com `echo` dos comandos e roda apenas na branch `main`
+O pipeline também utiliza cache da pasta `.m2/repository` para reduzir o tempo de builds repetidos.
 
-O pipeline tambem usa cache da pasta `.m2/repository` para reduzir o tempo de builds repetidos.
+## Decisões técnicas
 
-## Decisoes tecnicas
+Escolhi `Java 21` porque a linguagem oferece bibliotecas maduras, boa legibilidade e um ecossistema forte para testes, parsing e organização em camadas. Para um desafio técnico, isso ajuda a entregar uma solução fácil de ler, simples de manter e tranquila de defender em entrevista.
 
-Escolhi `Java 21` porque a linguagem oferece bibliotecas maduras, boa legibilidade e um ecossistema forte para testes, parsing e organizacao em camadas. Para um desafio tecnico, isso ajuda a entregar uma solucao facil de ler e simples de defender.
+Usei `Jsoup` porque a fonte de dados é estática e possui HTML consistente. Nesse contexto, browser automation não é necessário para o fluxo principal, e um parser HTML dedicado resolve o problema com menos complexidade operacional.
 
-Usei `Jsoup` porque a fonte de dados e estatica e possui HTML consistente. Nesse contexto, browser automation nao e necessario para o fluxo principal, e um parser HTML dedicado resolve o problema com menos complexidade operacional.
+Separei o parse da listagem e o parse da página de detalhe para reduzir acoplamento e deixar a lógica mais testável. Também mantive a exportação em arquivos separada da orquestração do crawler, o que facilita manutenção e futuras extensões.
 
-Separei o parse da listagem e o parse da pagina de detalhe para reduzir acoplamento e deixar a logica mais testavel. Tambem mantive a exportacao em arquivos separada da orquestracao do crawler, o que facilita manutencao e extensao futura.
+A persistência em PostgreSQL foi mantida opcional para não transformar a execução básica em algo dependente de infraestrutura externa. O mesmo critério foi usado no enriquecimento com IA, que fica desacoplado por configuração de ambiente.
 
-A persistencia em PostgreSQL foi mantida opcional para nao transformar a execucao basica em algo dependente de infraestrutura externa. O mesmo criterio foi usado no enrichment com IA, que fica desacoplado por configuracao de ambiente.
+## Tratamento de erros e boas práticas
 
-## Tratamento de erros e boas praticas
-
-- `User-Agent` explicito nas requisicoes
-- delay configuravel entre requisicoes para respeitar a fonte
-- falha explicita para respostas HTTP com status `>= 400`
-- preservacao de interrupcao de thread quando aplicavel
-- validacao de argumentos de entrada
+- `User-Agent` explícito nas requisições
+- delay configurável entre requisições para respeitar a fonte
+- falha explícita para respostas HTTP com status `>= 400`
+- preservação de interrupção de thread quando aplicável
+- validação de argumentos de entrada
 - escrita dos arquivos com `UTF-8`
-- execucao do container com usuario nao root
-- testes unitarios para parsing e fluxo principal
+- execução do container com usuário não root
+- testes unitários para parsing e fluxo principal
 
 ## O que eu faria com mais tempo
 
-Com mais tempo, eu adicionaria retries com backoff exponencial, logs estruturados, metricas de execucao e configuracao externa mais flexivel por profiles ou arquivo `.env`. Tambem faria uma camada de persistencia historica das execucoes para permitir comparacao entre coletas e auditoria dos resultados.
+Com mais tempo, eu adicionaria retries com backoff exponencial, logs estruturados, métricas de execução e uma configuração externa mais flexível por profiles ou arquivo `.env`. Também faria uma camada de persistência histórica das execuções para permitir comparação entre coletas e auditoria dos resultados.
 
-Em um cenario mais proximo de producao, eu aprofundaria tratamento anti-bot, ampliaria a cobertura de testes integrados e adicionaria validacoes de contrato para os arquivos de saida. Outra evolucao natural seria um painel simples para acompanhar execucoes e visualizar indicadores do scraper.
+Em um cenário mais próximo de produção, eu aprofundaria o tratamento anti-bot, ampliaria a cobertura de testes integrados e adicionaria validações de contrato para os arquivos de saída. Outra evolução natural seria um painel simples para acompanhar execuções e visualizar indicadores do scraper.
 
-O projeto ja possui uma primeira versao funcional de enrichment com LLM local via `Ollama`. Com mais tempo, eu acrescentaria cache de respostas, score de confianca e prompts especializados por categoria de livro.
+O projeto já possui uma primeira versão funcional de enriquecimento com LLM local via `Ollama`. Com mais tempo, eu acrescentaria cache de respostas, score de confiança e prompts especializados por categoria de livro.
 
 ## Como usei IA durante o desafio
 
-Usei IA como ferramenta de apoio para acelerar exploracao tecnica, revisar alternativas de estrutura e validar abordagens de implementacao. Nenhuma sugestao foi aceita sem verificacao no codigo, no HTML real da fonte e na execucao do projeto.
+Usei IA como ferramenta de apoio para acelerar a exploração técnica, revisar alternativas de estrutura e comparar abordagens de implementação. Em todos os casos, as sugestões passaram por validação manual no código, no HTML real da fonte e na execução prática do projeto.
 
-Os usos principais foram:
+Durante o desafio, a IA ajudou principalmente na organização inicial da arquitetura, na revisão da separação de responsabilidades entre camadas, na comparação de formatos de pipeline GitLab CI e Docker, na análise de seletores CSS para o site e no desenho da ideia de enriquecimento opcional com LLM.
 
-- estruturar o esqueleto inicial do projeto
-- revisar separacao de responsabilidades entre camadas
-- comparar abordagens de pipeline GitLab CI e Docker
-- revisar seletores e edge cases de parsing
-- desenhar a ideia do enrichment opcional por LLM
+O que funcionou melhor foi a velocidade para gerar alternativas de estrutura e antecipar riscos antes da validação final. O que exigiu validação manual foi o comportamento real do HTML, o ajuste fino do parsing e a confirmação de que testes, build e lint realmente passavam no ambiente.
 
-O que funcionou bem foi a velocidade para gerar alternativas de estrutura e apontar riscos antes da validacao final. O que exigiu validacao manual foi o comportamento real do HTML, o ajuste fino do parsing e a confirmacao de que testes, build e lint realmente passavam no ambiente.
-
-Prompts utilizados durante o desafio:
+Os prompts principais utilizados foram os seguintes:
 
 Prompt 1:
 
 ```text
-Leia este desafio tecnico de crawler/RPA + IA e proponha uma arquitetura simples em Java, com separacao de responsabilidades, testes, Docker e GitLab CI.
+Leia este desafio técnico de crawler/RPA + IA e proponha uma arquitetura simples em Java, com separação de responsabilidades, testes, Docker e GitLab CI.
 ```
 
 Prompt 2:
 
 ```text
-Com base no HTML do books.toscrape.com, quais seletores CSS sao mais robustos para extrair titulo, preco, disponibilidade, rating e link de detalhe?
+Com base no HTML do books.toscrape.com, quais seletores CSS são mais robustos para extrair título, preço, disponibilidade, rating e link de detalhe?
 ```
 
 Prompt 3:
 
 ```text
-Monte um exemplo de pipeline GitLab CI para um projeto Java com stages lint, test, build e deploy, usando variaveis do registry e cache de dependencias.
+Monte um exemplo de pipeline GitLab CI para um projeto Java com stages lint, test, build e deploy, usando variáveis do registry e cache de dependências.
 ```
 
 Prompt 4:
 
 ```text
-Sugira uma forma de usar LLM para transformar descricao livre de um livro em campos estruturados curtos para enriquecer a saida do crawler.
+Sugira uma forma de usar LLM para transformar descrição livre de um livro em campos estruturados curtos para enriquecer a saída do crawler.
 ```
 
-## Bonus implementados
+## Bônus implementados
 
-- browser automation para pagina dinamica em `https://quotes.toscrape.com/js/`
-- enrichment opcional com LLM local para transformar descricao livre em campos estruturados
-- cache de dependencias Maven no pipeline
+- automação de navegador para página dinâmica em `https://quotes.toscrape.com/js/`
+- enriquecimento opcional com LLM local para transformar descrição livre em campos estruturados
+- cache de dependências Maven no pipeline
 - `docker-compose.yml` para subir scraper e banco localmente
 
-## Validacao executada
+## Validação executada
 
-As validacoes abaixo foram executadas localmente:
+As validações abaixo foram executadas localmente:
 
 - `mvn clean test`
 - `mvn checkstyle:check`
 - `mvn -DskipTests package`
-- execucao real do JAR em modo CLI
+- execução real do JAR em modo CLI
 - `docker compose config`
 - `npm install`
 - `npm run dynamic:scrape`
-- execucao real do enrichment com `Ollama`
+- execução real do enriquecimento com `Ollama`
 - `docker build -t books-crawler-java:test .`
-- execucao do container com validacao dos endpoints `GET /health` e `POST /run`
+- execução do container com validação dos endpoints `GET /health` e `POST /run`
 
-Para repetir a validacao principal no Windows PowerShell:
+Para repetir a validação principal no Windows PowerShell:
 
 ```powershell
 .\scripts\validate.ps1
 ```
 
-## Comandos uteis
+## Comandos úteis
 
 ```bash
 mvn test
