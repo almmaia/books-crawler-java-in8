@@ -168,7 +168,7 @@ O pipeline também utiliza cache da pasta `.m2/repository` para reduzir o tempo 
 
 ## Decisões técnicas
 
-Escolhi `Java 21` porque a linguagem oferece bibliotecas maduras, boa legibilidade e um ecossistema forte para testes, parsing e organização em camadas. Para um desafio técnico, isso ajuda a entregar uma solução fácil de ler, simples de manter e tranquila de defender em entrevista.
+Escolhi `Java 21` porque a linguagem oferece bibliotecas maduras para HTTP, parsing, serialização, testes e organização em camadas.
 
 Usei `Jsoup` porque a fonte de dados é estática e possui HTML consistente. Nesse contexto, browser automation não é necessário para o fluxo principal, e um parser HTML dedicado resolve o problema com menos complexidade operacional.
 
