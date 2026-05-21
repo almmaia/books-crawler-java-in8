@@ -1,0 +1,12 @@
+{
+  "name": "books-crawler-java-bonus",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Browser automation bonus for the crawler challenge",
+  "scripts": {
+    "dynamic:scrape": "node scripts/dynamic-quotes-scraper.mjs"
+  },
+  "devDependencies": {
+    "playwright": "^1.54.1"
+  }
+}

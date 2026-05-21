@@ -1,0 +1,10 @@
+/target/
+/output/
+/output-*/
+/output-dynamic/
+/output-ai/
+/output-smoke-ai/
+/books-crawler-java-entrega.zip
+/node_modules/
+/.idea/
+*.iml

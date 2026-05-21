@@ -1,0 +1,35 @@
+services:
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      BOOKS_DB_URL: jdbc:postgresql://postgres:5432/books_crawler
+      BOOKS_DB_USER: books
+      BOOKS_DB_PASSWORD: books
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./output:/app/output
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: books_crawler
+      POSTGRES_USER: books
+      POSTGRES_PASSWORD: books
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U books -d books_crawler"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+volumes:
+  postgres-data:

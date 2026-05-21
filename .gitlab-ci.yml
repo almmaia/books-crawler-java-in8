@@ -1,0 +1,53 @@
+stages:
+  - lint
+  - test
+  - build
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
+  IMAGE_TAG: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA"
+
+cache:
+  key: "$CI_PROJECT_ID-maven"
+  paths:
+    - .m2/repository
+
+lint:
+  stage: lint
+  image: maven:3.9.9-eclipse-temurin-21
+  script:
+    - mvn $MAVEN_CLI_OPTS checkstyle:check
+
+test:
+  stage: test
+  image: maven:3.9.9-eclipse-temurin-21
+  script:
+    - mvn $MAVEN_CLI_OPTS test
+
+build:
+  stage: build
+  image: docker:27.5.1
+  services:
+    - name: docker:27.5.1-dind
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" -u "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - apk add --no-cache openjdk21-jdk maven
+    - mvn $MAVEN_CLI_OPTS -DskipTests clean package
+    - docker build -t "$IMAGE_TAG" .
+    - docker push "$IMAGE_TAG"
+
+deploy:
+  stage: deploy
+  image: alpine:3.21
+  only:
+    - main
+  script:
+    - echo "aws ecs update-service --cluster crawler-cluster --service books-crawler-service --force-new-deployment"
+    - echo "docker image deployed: $IMAGE_TAG"
